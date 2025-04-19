@@ -1,0 +1,49 @@
+/* src/app/app.module.css */
+
+
+.header .wrapper {
+    display: flex;
+    place-items: flex-start;
+    flex-wrap: wrap;
+} /* Remove this closing brace if it's extra */
+
+.app-container {
+    position: relative;
+    min-height: 100vh;
+    z-index: 0;
+}
+
+@media (max-width: 430px) {
+    .app-wrapper {
+        position: relative;
+        width: 100%;
+    }
+}
+
+.cardContainer {
+    @apply flex flex-col gap-4 items-center mx-auto max-w-5xl mx-auto p-4;
+  }
+  
+  .card {
+    @apply border-2 border-[#10b981] w-full bg-transparent rounded-xl text-white shadow-md p-2 sm:p-6 transition-transform duration-200 hover:scale-105 cursor-pointer;
+  }
+  
+  .heading {
+    @apply text-2xl text-center text-white mb-4 font-bold;
+  }
+  
+  .jsonOutput {
+    @apply bg-gray-100 p-2 rounded text-sm overflow-auto;
+  }
+  
+  .popupOverlay {
+    @apply fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50;
+  }
+  
+  .popupContent {
+    @apply bg-white p-6 rounded shadow-md relative max-w-xl w-full;
+  }
+  
+  .popupClose {
+    @apply absolute top-0 right-0 mt-2 mr-4 text-2xl font-bold text-gray-500 hover:text-gray-800;
+  }
