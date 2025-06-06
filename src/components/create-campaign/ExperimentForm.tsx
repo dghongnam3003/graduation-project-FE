@@ -31,6 +31,7 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
     const [showPopup, setShowPopup] = useState(false);
     const [showFailedPopup, setShowFailedPopup] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
     const router = useRouter();
 
     const handleClosePopup = () => {
@@ -43,6 +44,7 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
 
     const handleCloseFailedPopup = () => {
         setShowFailedPopup(false);
+        setErrorMessage('');
     }
 
     const [formData, setFormData] = useState({
@@ -147,21 +149,37 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitted(true);
+        setErrorMessage(''); // Reset error message
+        
         if (!connected || !publicKey) {
-            alert('Please connect your wallet first');
-            setIsSubmitted(false)
+            const errorMsg = 'Please connect your wallet first';
+            console.error('❌ Wallet not connected:', { connected, publicKey });
+            setErrorMessage(errorMsg);
+            alert(errorMsg);
+            setIsSubmitted(false);
             return;
         }
+
+        console.log('🔍 Wallet connection check:', {
+            connected,
+            publicKey: publicKey.toString(),
+            wallet: wallet?.adapter?.name
+        });
 
         try {
 
             if (!uploadedImage) {
-                alert('Please upload an image first');
+                const errorMsg = 'Please upload an image first';
+                console.error('❌ Image upload required');
+                setErrorMessage(errorMsg);
+                alert(errorMsg);
                 setIsSubmitted(false);
                 return;
             }
+            
+            console.log('🖼️ Uploading image to IPFS...');
             const metadataUri = await uploadToIPFS(uploadedImage);
-            console.log('🚀 ~ metadataUri:', metadataUri);
+            console.log('✅ IPFS upload successful:', metadataUri);
 
             let depositDeadlineTimestamp: BN | null = null;
             let tradeDeadlineTimestamp: BN;
@@ -169,28 +187,63 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
             // Convert date strings to Unix timestamps
             if (formData.depositDeadline) {
                 depositDeadlineTimestamp = new BN(Math.floor(new Date(formData.depositDeadline).getTime() / 1000));
+                console.log('📅 Deposit deadline timestamp:', depositDeadlineTimestamp.toString());
             }
 
             if (formData.tradeDeadline) {
                 tradeDeadlineTimestamp = new BN(Math.floor(new Date(formData.tradeDeadline).getTime() / 1000));
+                console.log('📅 Trade deadline timestamp:', tradeDeadlineTimestamp.toString());
             } else {
-                alert('Trade Deadline is required.');
+                const errorMsg = 'Trade Deadline is required.';
+                console.error('❌ Trade deadline missing');
+                setErrorMessage(errorMsg);
+                alert(errorMsg);
+                setIsSubmitted(false);
                 return;
             }
 
             const currentTimestamp = Math.floor(Date.now() / 1000);
+            console.log('⏰ Current timestamp:', currentTimestamp);
 
             // Validate that Trade Deadline is after current date
             if (tradeDeadlineTimestamp.lte(new BN(currentTimestamp))) {
-                alert('Trade Deadline must be in the future.');
+                const errorMsg = 'Trade Deadline must be in the future.';
+                console.error('❌ Trade deadline validation failed:', {
+                    tradeDeadline: tradeDeadlineTimestamp.toString(),
+                    current: currentTimestamp
+                });
+                setErrorMessage(errorMsg);
+                alert(errorMsg);
+                setIsSubmitted(false);
                 return;
             }
 
             // If Deposit Deadline is provided, validate that Trade Deadline is after it
             if (depositDeadlineTimestamp && tradeDeadlineTimestamp.lte(depositDeadlineTimestamp)) {
-                alert('Trade Deadline must be after Deposit Deadline.');
+                const errorMsg = 'Trade Deadline must be after Deposit Deadline.';
+                console.error('❌ Deadline order validation failed:', {
+                    depositDeadline: depositDeadlineTimestamp.toString(),
+                    tradeDeadline: tradeDeadlineTimestamp.toString()
+                });
+                setErrorMessage(errorMsg);
+                alert(errorMsg);
+                setIsSubmitted(false);
                 return;
             }
+
+            const donationGoalInLamports = Number(formData.donationGoal) * LAMPORTS_PER_SOL;
+            console.log('💰 Donation goal in lamports:', donationGoalInLamports);
+
+            console.log('🚀 Calling createCampaign with parameters:', {
+                campaignTokenName: formData.name,
+                campaignTokenSymbol: formData.symbol,
+                uri: metadataUri,
+                depositDeadline: depositDeadlineTimestamp ? depositDeadlineTimestamp.toNumber() : 0,
+                tradeDeadline: tradeDeadlineTimestamp.toNumber(),
+                donationGoal: donationGoalInLamports,
+                publicKey: publicKey.toString(),
+                walletName: wallet?.adapter?.name
+            });
 
             const campaignIndex = await createCampaign({
                 campaignTokenName: formData.name,
@@ -198,16 +251,48 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
                 uri: metadataUri,
                 depositDeadline: depositDeadlineTimestamp ? depositDeadlineTimestamp.toNumber() : 0,
                 tradeDeadline: tradeDeadlineTimestamp.toNumber(),
-                donationGoal: Number(formData.donationGoal) * LAMPORTS_PER_SOL,
+                donationGoal: donationGoalInLamports,
                 walletAdapter: wallet?.adapter,
                 publicKey: publicKey
             });
-            console.log('🚀 ~ campaignIndex:', campaignIndex);
+            
+            console.log('✅ Campaign created successfully! Index:', campaignIndex.toString());
             setCreatedCampaignIndex(campaignIndex);
-
             setShowPopup(true);
-        } catch (error) {
-            console.error('Error creating campaign:', error);
+            
+        } catch (error: unknown) {
+            const errorObj = error as Record<string, unknown>;
+            console.error('❌ Campaign creation failed with detailed error:', {
+                message: (error as Error)?.message,
+                code: errorObj?.code,
+                logs: errorObj?.logs,
+                stack: (error as Error)?.stack,
+                name: (error as Error)?.name,
+                cause: errorObj?.cause,
+                fullError: error
+            });
+            
+            // Extract meaningful error message
+            let userFriendlyMessage = 'An unknown error occurred while creating your campaign.';
+            
+            if (error && typeof error === 'object' && 'message' in error) {
+                const errorMessage = (error as Error).message;
+                if (errorMessage.includes('Insufficient SOL') || errorMessage.includes('insufficient funds')) {
+                    userFriendlyMessage = `Insufficient SOL balance. Please add more SOL to your wallet. Error: ${errorMessage}`;
+                } else if (errorMessage.includes('signature verification failed')) {
+                    userFriendlyMessage = 'Transaction signing failed. Please try again.';
+                } else if (errorMessage.includes('User rejected')) {
+                    userFriendlyMessage = 'Transaction was rejected by user.';
+                } else if (errorMessage.includes('Network Error') || errorMessage.includes('fetch')) {
+                    userFriendlyMessage = 'Network error. Please check your connection and try again.';
+                } else if (errorMessage.includes('Account not found')) {
+                    userFriendlyMessage = 'Account setup error. Please ensure you have enough SOL for transaction fees.';
+                } else {
+                    userFriendlyMessage = `Campaign creation failed: ${errorMessage}`;
+                }
+            }
+            
+            setErrorMessage(userFriendlyMessage);
             setShowFailedPopup(true);
             setIsSubmitted(false);
         }
@@ -377,15 +462,23 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
             )}
 
             {showFailedPopup && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Create Campaign Failed</h2>
-                        <p className="mb-4">An error occurred while creating your campaign. Please try again.</p>
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <h2 className="text-2xl font-bold mb-4 text-red-600">Create Campaign Failed</h2>
+                        <div className="mb-4">
+                            <p className="text-gray-700 mb-2">An error occurred while creating your campaign:</p>
+                            <div className="bg-red-50 border border-red-200 rounded p-3">
+                                <p className="text-red-800 text-sm break-words">{errorMessage}</p>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-2">
+                                Please check the browser console for more detailed error information.
+                            </p>
+                        </div>
                         <button
                             onClick={handleCloseFailedPopup}
-                            className="bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded"
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full"
                         >
-                            OK
+                            Close
                         </button>
                     </div>
                 </div>

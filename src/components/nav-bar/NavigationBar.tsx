@@ -43,7 +43,7 @@ export const NavigationBar: React.FC = () => {
         <div className="flex flex-wrap gap-1 sm:gap-5 items-center px-3 md:px-6 py-1.5 md:py-3 mx-auto max-w-full">
         <img
           loading="lazy"
-          src="./logo2.png"
+          src="/logo2.png"
           alt=""
           className="object-contain shrink-0 self-stretch aspect-[0.91] w-[35px] md:w-[73px] cursor-pointer transform scale-75 md:scale-100"
           onClick={() => router.push('/')}
