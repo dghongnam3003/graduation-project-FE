@@ -111,20 +111,20 @@ async function createCampaign(params: CreateCampaignParams): Promise<BN> {
 
   console.log('🎯 Finding campaign PDA...');
   
-  // Campaign index should be the NEXT index (lastCampaignIndex + 1)
-  const nextCampaignIndex = lastCampaignIndex.add(new BN(1));
-  console.log('📈 Next campaign index to use:', nextCampaignIndex.toString());
+  // Smart contract uses lastCampaignIndex for seeds, not nextCampaignIndex
+  // The contract will automatically increment the index after creation
+  console.log('📈 Campaign index for seeds:', lastCampaignIndex.toString());
   
   const [campaign, campaignBump] = PublicKey.findProgramAddressSync(
-    [Buffer.from("campaign"), params.publicKey.toBuffer(), Buffer.from(nextCampaignIndex.toArray("le", 8))],
+    [Buffer.from("campaign"), params.publicKey.toBuffer(), Buffer.from(lastCampaignIndex.toArray("le", 8))],
     program.programId
   );
   console.log('🏛️ Campaign PDA:', campaign.toString());
   console.log('🔢 Campaign seeds debug:', {
     seed1: "campaign",
     seed2: params.publicKey.toString(),
-    seed3: nextCampaignIndex.toString(),
-    seed3_bytes: Array.from(nextCampaignIndex.toArray("le", 8))
+    seed3: lastCampaignIndex.toString(),
+    seed3_bytes: Array.from(lastCampaignIndex.toArray("le", 8))
   });
 
   const campaignTokenName = params.campaignTokenName;
@@ -155,6 +155,7 @@ async function createCampaign(params: CreateCampaignParams): Promise<BN> {
     donationGoal,
   ).accounts({
     creator: params.publicKey,
+    creatorAccount: creator, // Add creator account as required by IDL
     campaignAccount: campaign,
   }).instruction());
 

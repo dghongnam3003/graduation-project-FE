@@ -45,3 +45,5 @@ package-lock.json
 /.idea
 
 .cursorrules
+
+wrangler.toml
