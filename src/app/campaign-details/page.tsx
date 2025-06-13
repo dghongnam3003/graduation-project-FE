@@ -343,28 +343,30 @@ const CampaignContent = () => {
                             </strong>
                         </div>
         
-                        {/* Funding Information */}
-                        <div className="border-b-2 border-[#10b981] pb-6">
-                            <h3 className="text-xl sm:text-3xl text-[#10b981] font-semibold mb-4 text-700">Funding Status</h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div 
-                                    className="border-[3px] border-[#065f46] p-4 rounded-xl overflow-hidden w-full" 
-                                >
-                                    <p className="text-sm sm:text-xl text-white text-600">Total Fund Raised</p>
-                                    <p className="text-xl sm:text-2xl font-bold text-green-600">
-                                        {(campaign.totalFundRaised / 1e9).toFixed(2)} SOL
-                                    </p>
-                                </div>
-                                <div 
-                                    className="border-[3px] border-[#065f46] p-4 rounded-xl overflow-hidden w-full" 
-                                >                                    
-                                    <p className="text-sm sm:text-xl text-white text-600">Donation Goal</p>
-                                    <p className="text-xl sm:text-2xl font-bold text-blue-600">
-                                        {campaign.donationGoal.toFixed(2)} SOL
-                                    </p>
+                        {/* Funding Information - Hidden for COMPLETED campaigns */}
+                        {campaign.status !== 'COMPLETED' && (
+                            <div className="border-b-2 border-[#10b981] pb-6">
+                                <h3 className="text-xl sm:text-3xl text-[#10b981] font-semibold mb-4 text-700">Funding Status</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div 
+                                        className="border-[3px] border-[#065f46] p-4 rounded-xl overflow-hidden w-full" 
+                                    >
+                                        <p className="text-sm sm:text-xl text-white text-600">Total Fund Raised</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-green-600">
+                                            {(campaign.totalFundRaised / 1e9).toFixed(2)} SOL
+                                        </p>
+                                    </div>
+                                    <div 
+                                        className="border-[3px] border-[#065f46] p-4 rounded-xl overflow-hidden w-full" 
+                                    >                                    
+                                        <p className="text-sm sm:text-xl text-white text-600">Donation Goal</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-blue-600">
+                                            {campaign.donationGoal.toFixed(2)} SOL
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
         
                         {/* Deadlines */}
                         <div className="border-b-2 border-[#10b981] pb-6">
@@ -556,14 +558,14 @@ const CampaignContent = () => {
           {showPopup && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                   <div className="bg-white p-6 rounded-lg shadow-lg">
-                      <h2 className="text-2xl font-bold mb-4">Claim Successful</h2>
+                      <h2 className="text-2xl text-black font-bold mb-4">Claim Successful</h2>
                       {isClosing ? (
                             <div className="flex items-center gap-3 mb-4">
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                                <p>Please wait a moment...</p>
+                                <Loader2 className="h-5 w-5 animate-spin text-black" />
+                                <p className="text-black">Please wait a moment...</p>
                             </div>
                         ) : (
-                            <p className="mb-4">{donateSuccess}</p>
+                            <p className="mb-4 text-black">{donateSuccess}</p>
                         )}
                       <button
                           onClick={handleClosePopup}
@@ -579,14 +581,14 @@ const CampaignContent = () => {
             {showDonatePopup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Donation Successful</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-black">Donation Successful</h2>
                         {isClosing ? (
                             <div className="flex items-center gap-3 mb-4">
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                                <p>Please wait a moment...</p>
+                                <Loader2 className="h-5 w-5 animate-spin text-black" />
+                                <p className="text-black">Please wait a moment...</p>
                             </div>
                         ) : (
-                            <p className="mb-4">{donateSuccess}</p>
+                            <p className="mb-4 text-black">{donateSuccess}</p>
                         )}
                         <button
                             onClick={handleCloseDonatePopup}
@@ -602,15 +604,15 @@ const CampaignContent = () => {
             {showDonateAmountPopup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-xl font-bold mb-4">Donate SOL</h2>
-                        <p className="mb-4">Enter the amount of SOL you want to donate (Minimal 0,1 SOL):</p>
+                        <h2 className="text-xl font-bold mb-4 text-black">Donate SOL</h2>
+                        <p className="mb-4 text-black">Enter the amount of SOL you want to donate (Minimal 0,1 SOL):</p>
                         <input
                             type="number"
                             min="0.1"
                             // step="0.1"
                             value={donationAmount}
                             onChange={(e) => setDonationAmount(parseFloat(e.target.value))}
-                            className="w-full p-2 border rounded mb-4"
+                            className="w-full p-2 border rounded mb-4 text-black"
                             placeholder="Enter SOL amount"
                         />
                         {donatePopupError && (
@@ -619,7 +621,7 @@ const CampaignContent = () => {
                         <div className="flex justify-end">
                             <button
                                 onClick={() => setShowDonateAmountPopup(false)}
-                                className="mr-2 px-4 py-2 bg-gray-300 rounded"
+                                className="mr-2 px-4 py-2 bg-gray-300 text-black rounded"
                             >
                                 Cancel
                             </button>
@@ -636,14 +638,14 @@ const CampaignContent = () => {
             {showClaimPopup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Claim Successful</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-black">Claim Successful</h2>
                         {isClosing ? (
                             <div className="flex items-center gap-3 mb-4">
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                                <p>Please wait a moment...</p>
+                                <Loader2 className="h-5 w-5 animate-spin text-black" />
+                                <p className="text-black">Please wait a moment...</p>
                             </div>
                         ) : (
-                            <p className="mb-4">{claimSuccess}</p>
+                            <p className="mb-4 text-black">{claimSuccess}</p>
                         )}
                         <button
                             onClick={handleCloseClaimPopup}

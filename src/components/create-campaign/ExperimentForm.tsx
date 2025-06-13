@@ -442,14 +442,14 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({ onClose }) => {
             {showPopup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Create Campaign Successful</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-black">Create Campaign Successful</h2>
                         {isClosing ? (
                             <div className="flex items-center gap-3 mb-4">
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                                <p>Please wait a moment, you will be redirected to the homepage...</p>
+                                <Loader2 className="h-5 w-5 animate-spin text-black" />
+                                <p className="text-black">Please wait a moment, you will be redirected to the homepage...</p>
                             </div>
                         ) : (
-                            <p className="mb-4">Your campaign has been created</p>
+                            <p className="mb-4 text-black">Your campaign has been created</p>
                         )}
                         <button
                             onClick={handleClosePopup}

@@ -108,42 +108,42 @@ async function createCampaignToken(
   console.log("🚀 ~ createCampaignToken ~ maxSolCost:", maxSolCost.toString())
   let tokenAmount = calcOutTokenAmount(maxSolCost, slippage);
 
-  tx.add(
-    createAssociatedTokenAccountInstruction(
-      wallet.publicKey,
-      associatedSigner,
-      wallet.publicKey,
-      mint,
-    )
-  );
-  const pumpFunBuyTokenAccounts = {
-    global: pumpFunGlobal,
-    feeRecipient: pumpFunFeeRecipient,
-    mint: mint,
-    bondingCurve: bondingCurve,
-    associatedBondingCurve: associatedBondingCurve,
-    associatedUser: associatedSigner,
-    user: wallet.publicKey,
-    eventAuthority: pumpFunEventAuthority,
-    program: pumpFunProgram.programId,
-  }
-  tx.add(await pumpFunProgram.methods.buy(tokenAmount, maxSolCost).accounts(pumpFunBuyTokenAccounts).instruction());
+  // tx.add(
+  //   createAssociatedTokenAccountInstruction(
+  //     wallet.publicKey,
+  //     associatedSigner,
+  //     wallet.publicKey,
+  //     mint,
+  //   )
+  // );
+  // const pumpFunBuyTokenAccounts = {
+  //   global: pumpFunGlobal,
+  //   feeRecipient: pumpFunFeeRecipient,
+  //   mint: mint,
+  //   bondingCurve: bondingCurve,
+  //   associatedBondingCurve: associatedBondingCurve,
+  //   associatedUser: associatedSigner,
+  //   user: wallet.publicKey,
+  //   eventAuthority: pumpFunEventAuthority,
+  //   program: pumpFunProgram.programId,
+  // }
+  // tx.add(await pumpFunProgram.methods.buy(tokenAmount, maxSolCost).accounts(pumpFunBuyTokenAccounts).instruction());
 
-  // Deposit token to campaign
-  tx.add(
-    createAssociatedTokenAccountInstruction(
-      wallet.publicKey,
-      associatedCampaign,
-      campaign,
-      mint,
-    )
-  )
-  tx.add(createTransferInstruction(
-    associatedSigner,
-    associatedCampaign,
-    wallet.publicKey,
-    BigInt(tokenAmount.toString()),
-  ))
+  // // Deposit token to campaign
+  // tx.add(
+  //   createAssociatedTokenAccountInstruction(
+  //     wallet.publicKey,
+  //     associatedCampaign,
+  //     campaign,
+  //     mint,
+  //   )
+  // )
+  // tx.add(createTransferInstruction(
+  //   associatedSigner,
+  //   associatedCampaign,
+  //   wallet.publicKey,
+  //   BigInt(tokenAmount.toString()),
+  // ))
 
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.feePayer = wallet.publicKey;
